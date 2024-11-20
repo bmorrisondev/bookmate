@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, SignedOut, SignInButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Home", href: "/" },
   { name: "Calendar", href: "/calendar" },
   { name: "Schedule", href: "/schedule" },
+  { name: "Settings", href: "/settings" },
 ];
 
 export function Navbar() {
@@ -41,7 +42,10 @@ export function Navbar() {
               ))}
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
+            <SignedOut>
+              <SignInButton mode="modal" />
+            </SignedOut>
             <UserButton afterSignOutUrl="/" />
           </div>
         </div>
