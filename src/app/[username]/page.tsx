@@ -28,7 +28,7 @@ async function getUser(username: string) {
 export default async function UserProfilePage({ params }: Props) {
   const user = await getUser((await params).username);
 
-  if (!user) {
+  if (!user || !user.username) {
     notFound();
   }
 
