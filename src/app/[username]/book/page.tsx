@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
+import { useParams } from "next/navigation"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { createBooking } from "./_actions/create-booking"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -32,8 +35,10 @@ const formSchema = z.object({
 
 export default function BookingForm() {
   const searchParams = useSearchParams()
+  const params = useParams()
   const date = searchParams.get("date")
   const time = searchParams.get("time")
+  const username = params.username as string
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,9 +49,29 @@ export default function BookingForm() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // TODO: Handle form submission
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!date || !time) return
+
+    try {
+      const result = await createBooking({
+        ...values,
+        date: new Date(date),
+        time: new Date(time),
+        username,
+      })
+
+      if (result.success) {
+        toast.success("Meeting scheduled! Check your email for confirmation.")
+        // Wait a bit for the toast to show before navigating
+        setTimeout(() => {
+          window.location.href = `/${username}`
+        }, 2000)
+      } else {
+        toast.error("Failed to schedule meeting. Please try again.")
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.")
+    }
   }
 
   if (!date || !time) {

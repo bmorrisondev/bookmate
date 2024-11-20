@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, RefreshCw, Loader2 } from "lucide-react";
 import { getGoogleToken } from "../actions";
 import { useUser } from "@clerk/nextjs";
-import { ComposedChart } from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import { saveCalendars } from "../_actions/save-calendars";
+import { getCalendars } from "../_actions/get-calendars";
 
 interface GoogleCalendar {
   id: string;
@@ -17,7 +19,8 @@ export function CalendarSelector() {
   const [isLoading, setIsLoading] = useState(false);
   const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useUser()
+  const { user } = useUser();
+  const { toast } = useToast();
 
   async function reauthAcct() {
     if(user) {
@@ -38,12 +41,11 @@ export function CalendarSelector() {
     }
   }
 
-  const fetchCalendars = async () => {
+  const fetchCalendars = async (savedSelections?: { id: string; name: string }[]) => {
     setIsLoading(true);
     setError(null);
     try {
       const googleAccount = user?.externalAccounts.find(ea => ea.provider === "google")
-      console.log(googleAccount)
       if(!googleAccount?.approvedScopes?.includes("https://www.googleapis.com/auth/calendar.readonly")) {
         void reauthAcct()
         return
@@ -68,7 +70,7 @@ export function CalendarSelector() {
         id: calendar.id,
         summary: calendar.summary,
         primary: calendar.primary || false,
-        selected: false,
+        selected: savedSelections?.some(sel => sel.id === calendar.id) || false,
       }));
       setCalendars(formattedCalendars);
     } catch (err) {
@@ -93,22 +95,39 @@ export function CalendarSelector() {
     setIsLoading(true);
     setError(null);
     try {
-      const selectedCalendarIds = calendars
-        .filter((cal) => cal.selected)
-        .map((cal) => cal.id);
-
-      // TODO: Implement saving selected calendars to your backend
-      console.log("Selected calendar IDs:", selectedCalendarIds);
-      
+      await saveCalendars(calendars);
+      toast({
+        title: "Success",
+        description: "Calendar selections have been saved.",
+      });
     } catch (err) {
       console.error("Error saving calendars:", err);
       setError(
         err instanceof Error ? err.message : "Failed to save calendar selection"
       );
+      toast({
+        title: "Error",
+        description: "Failed to save calendar selections. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    async function loadCalendars() {
+      try {
+        const savedSelections = await getCalendars();
+        await fetchCalendars(savedSelections);
+      } catch (error) {
+        console.error("Error loading calendars:", error);
+        // If getting saved selections fails, still try to load calendars
+        await fetchCalendars();
+      }
+    }
+    void loadCalendars();
+  }, [user]);
 
   return (
     <div className="space-y-6">
@@ -118,12 +137,12 @@ export function CalendarSelector() {
           <h2 className="text-lg font-semibold">Google Calendar Selection</h2>
         </div>
         <button
-          onClick={fetchCalendars}
+          onClick={() => fetchCalendars()}
           disabled={isLoading}
           className="flex items-center gap-2 rounded-md border px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          {calendars.length === 0 ? "Load Calendars" : "Refresh"}
+          Refresh
         </button>
       </div>
 
@@ -134,9 +153,13 @@ export function CalendarSelector() {
       )}
 
       <div className="rounded-lg border p-4">
-        {calendars.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          </div>
+        ) : calendars.length === 0 ? (
           <div className="flex justify-center py-8 text-sm text-gray-600">
-            Click the button above to load your Google Calendars
+            No calendars found. Click refresh to try again.
           </div>
         ) : (
           <div className="space-y-4">

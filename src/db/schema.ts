@@ -19,3 +19,11 @@ export const availability = pgTable("availability", {
   endTime: text("end_time").notNull(), // HH:mm format
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
+
+export const calendarSelections = pgTable("calendar_selections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  calendarId: text("calendar_id").notNull(),
+  calendarName: text("calendar_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+})

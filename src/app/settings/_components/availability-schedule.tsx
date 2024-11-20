@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Loader2 } from "lucide-react";
+import { saveAvailability } from "../_actions/save-availability";
+import { getAvailability, type WeeklySchedule } from "../_actions/get-availability";
+import { useToast } from "@/hooks/use-toast";
 
 type TimeRange = {
   start: string;
@@ -12,10 +15,6 @@ type TimeRange = {
 type DaySchedule = {
   enabled: boolean;
   timeRange: TimeRange;
-};
-
-type WeeklySchedule = {
-  [key: string]: DaySchedule;
 };
 
 const DAYS_OF_WEEK = [
@@ -43,7 +42,25 @@ const DEFAULT_SCHEDULE: WeeklySchedule = DAYS_OF_WEEK.reduce(
 );
 
 export function AvailabilitySchedule() {
-  const [schedule, setSchedule] = useState<WeeklySchedule>(DEFAULT_SCHEDULE);
+  const [schedule, setSchedule] = useState<WeeklySchedule | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    async function loadAvailability() {
+      try {
+        const data = await getAvailability();
+        setSchedule(data);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load availability. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    }
+    void loadAvailability();
+  }, [toast]);
 
   const handleTimeChange = (
     day: string,
@@ -79,6 +96,14 @@ export function AvailabilitySchedule() {
     date.setMinutes(parseInt(minutes));
     return format(date, "h:mm a");
   };
+
+  if (!schedule) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -125,13 +150,28 @@ export function AvailabilitySchedule() {
       </div>
       <div className="flex justify-end">
         <button
-          onClick={() => {
-            // TODO: Save schedule to backend
-            console.log("Schedule:", schedule);
+          onClick={async () => {
+            try {
+              setIsSaving(true);
+              await saveAvailability(schedule);
+              toast({
+                title: "Success",
+                description: "Your availability has been saved.",
+              });
+            } catch (error) {
+              toast({
+                title: "Error",
+                description: "Failed to save availability. Please try again.",
+                variant: "destructive",
+              });
+            } finally {
+              setIsSaving(false);
+            }
           }}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+          disabled={isSaving}
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
         >
-          Save Changes
+          {isSaving ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>

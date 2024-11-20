@@ -10,7 +10,6 @@ export async function getGoogleToken() {
     'oauth_google'
   )
 
-  console.log(token.data[0])
   return {
     token: token.data[0].token
   }
