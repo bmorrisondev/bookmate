@@ -5,12 +5,6 @@ import DayPicker from "./_components/day-picker";
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-interface Props {
-  params: {
-    username: string;
-  };
-}
-
 async function getUser(username: string) {
   try {
     const client = await clerkClient()
@@ -25,17 +19,24 @@ async function getUser(username: string) {
   }
 }
 
+interface Props {
+  params: Promise<{
+    username: string
+  }>;
+}
+
 export default async function UserProfilePage({ params }: Props) {
-  const user = await getUser((await params).username);
+  const { username } = await params;
+  const user = await getUser(username);
 
   if (!user || !user.username) {
     notFound();
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="space-y-6">
-        <div className="rounded-lg border p-6">
+    <div className="container mx-auto py-10 flex justify-center">
+      <div className="space-y-6 max-w-2xl">
+        <div className="rounded-lg border p-6 bg-white">
           <div className="flex items-center gap-4">
             <img
               src={user.imageUrl}

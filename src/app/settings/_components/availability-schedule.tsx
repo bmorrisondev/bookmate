@@ -17,6 +17,10 @@ type DaySchedule = {
   timeRange: TimeRange;
 };
 
+type Schedule = {
+  [day: string]: DaySchedule;
+};
+
 const DAYS_OF_WEEK = [
   "Monday",
   "Tuesday",
@@ -42,7 +46,7 @@ const DEFAULT_SCHEDULE: WeeklySchedule = DAYS_OF_WEEK.reduce(
 );
 
 export function AvailabilitySchedule() {
-  const [schedule, setSchedule] = useState<WeeklySchedule | null>(null);
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -67,26 +71,46 @@ export function AvailabilitySchedule() {
     type: "start" | "end",
     value: string
   ) => {
-    setSchedule((prev) => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        timeRange: {
-          ...prev[day].timeRange,
-          [type]: value,
+    setSchedule((prev: Schedule | null) => {
+      if (!prev) return prev;
+
+      // Create a new object if the day doesn't exist, with null check
+      const daySchedule: DaySchedule = prev?.[day] ?? { 
+        enabled: false, 
+        timeRange: { start: "", end: "" } 
+      };
+
+      return {
+        ...prev,
+        [day]: {
+          ...daySchedule,
+          timeRange: {
+            ...daySchedule.timeRange,
+            [type]: value,
+          },
         },
-      },
-    }));
+      };
+    });
   };
 
   const handleToggleDay = (day: string) => {
-    setSchedule((prev) => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        enabled: !prev[day].enabled,
-      },
-    }));
+    setSchedule((prev: Schedule | null) => {
+      if (!prev) return prev;
+
+      // Create a new object if the day doesn't exist, with null check
+      const daySchedule: DaySchedule = prev?.[day] ?? { 
+        enabled: false, 
+        timeRange: { start: "", end: "" } 
+      };
+
+      return {
+        ...prev,
+        [day]: {
+          ...daySchedule,
+          enabled: !daySchedule.enabled,
+        },
+      };
+    });
   };
 
   const formatTime = (time: string) => {
