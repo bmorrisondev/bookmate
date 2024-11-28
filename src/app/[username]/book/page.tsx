@@ -82,7 +82,7 @@ export default function BookingForm() {
   const selectedTime = new Date(time)
 
   return (
-    <div className="container max-w-2xl mx-auto py-10">
+    <div className="container max-w-2xl mx-auto py-10 px-2">
       <Card>
         <CardHeader>
           <CardTitle>Complete Your Booking</CardTitle>

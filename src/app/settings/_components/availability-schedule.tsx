@@ -139,9 +139,9 @@ export function AvailabilitySchedule() {
         {DAYS_OF_WEEK.map((day) => (
           <div
             key={day}
-            className="flex items-center justify-between border-b p-4 last:border-b-0"
+            className="flex flex-col sm:flex-row sm:items-center justify-between border-b p-4 last:border-b-0"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-2 sm:mb-0">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
