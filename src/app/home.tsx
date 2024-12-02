@@ -56,7 +56,7 @@ export default function Home() {
               <Info className="w-8 h-8 mr-4 text-yellow-600" />
               <p className="text-yellow-800 text-sm text-left">
                 This is a demo application built for <Link href="https://clerk.com" className="text-yellow-700 hover:text-yellow-900 underline">Clerk</Link>. It is not intended for production use and is meant solely for demonstration purposes.                
-                <Link href="https://github.com/brianmmdev/bookmate" target="_blank" className="mt-2 flex items-center text-sm text-yellow-700 hover:text-yellow-900 underline" >
+                <Link href="https://github.com/bmorrisondev/bookmate" target="_blank" className="mt-2 flex items-center text-sm text-yellow-700 hover:text-yellow-900 underline" >
                   View Source Code <ExternalLink className="ml-1 w-4 h-4" />
                 </Link>
               </p>
