@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Navbar } from "@/components/ui/navbar";
 import { Toaster } from "sonner";
+import ReauthProvider from "./providers/ReauthProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,7 +34,9 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <main className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50 text-gray-800">
-            {children}
+            <ReauthProvider>
+              {children}
+            </ReauthProvider>
           </main>
           <Toaster />
         </body>

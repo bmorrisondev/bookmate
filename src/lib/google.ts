@@ -5,11 +5,14 @@ import { startOfMonth, endOfMonth } from "date-fns"
 import { clerkClient } from "@clerk/nextjs/server"
 
 export async function getCalendarEvents(userId: string, year: number, month: number) {
+  console.log('this is being hit')
   // Get user's selected calendars
   const selections = await db
     .select()
     .from(calendarSelections)
     .where(eq(calendarSelections.userId, userId))
+
+  console.log("Selected Calendars:", selections)
 
   if (selections.length === 0) {
     return []
@@ -17,8 +20,11 @@ export async function getCalendarEvents(userId: string, year: number, month: num
 
   const calendarIds = selections.map(s => s.calendarId)
 
+  console.log("Selected Calendars:", calendarIds)
+
   const client = await clerkClient()
   const token = await client.users.getUserOauthAccessToken(userId, 'oauth_google')
+  console.log("token", JSON.stringify(token, null, 2))
   const accessToken = token.data[0].token
 
   // Calculate start and end of month

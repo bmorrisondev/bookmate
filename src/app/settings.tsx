@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { SignedIn, UserProfile } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 import { AvailabilitySchedule } from "./settings/_components/availability-schedule";
 import { CalendarSelector } from "./settings/_components/calendar-selector";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/ui/navbar";
+import { useUser } from "@clerk/nextjs";
+import { Loader2 } from "lucide-react";
 
 const tabs = [
   { 
@@ -23,7 +24,46 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 export default function Settings() {
+  const [isLoaded, setIsLoaded] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>("availability");
+  const { user } = useUser();
+
+  useEffect(() => {
+    if(!user) {
+      return
+    }
+    const requiredScopes = user?.publicMetadata?.additionalScopes;
+    if(!requiredScopes) {
+      setIsLoaded(true)
+      return
+    }
+
+    const googleAccount = user?.externalAccounts.find(ea => ea.provider === "google")
+    const approvedScopes = googleAccount?.approvedScopes?.split(" ")
+    const hasAllRequiredScopes = requiredScopes?.every(scope => approvedScopes?.includes(scope));
+  
+    if(!hasAllRequiredScopes) {
+      void reauthAcct(requiredScopes)
+    } else {
+      setIsLoaded(true)
+    }
+  }, [user])
+
+  async function reauthAcct(scopes: string[]) {
+    if(user) {
+      const googleAccount = user.externalAccounts
+        .find(ea => ea.provider === "google")
+
+      const reauth = await googleAccount?.reauthorize({
+        redirectUrl: window.location.href,
+        additionalScopes: scopes
+      })
+
+      if(reauth?.verification?.externalVerificationRedirectURL) {
+        window.location.href = reauth?.verification?.externalVerificationRedirectURL.href
+      }
+    }
+  }
 
   return (
     <>
@@ -55,7 +95,22 @@ export default function Settings() {
           </div>
 
           <div className="rounded-lg border bg-white">
-            {tabs.map((tab) => (
+            {!isLoaded && (
+              <div className="p-6 space-y-6">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold">Loading...</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Please wait while we load your settings
+                  </p>
+                </div>
+                <div className="pt-4">
+                  <div className="w-full flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                </div>
+              </div>
+            )}
+            {isLoaded && tabs.map((tab) => (
               activeTab === tab.id && (
                 <div key={tab.id} className="p-6 space-y-6">
                   <div className="space-y-1">

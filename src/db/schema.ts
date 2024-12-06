@@ -27,3 +27,12 @@ export const calendarSelections = pgTable("calendar_selections", {
   calendarName: text("calendar_name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
+
+export const calendarPreferences = pgTable("calendar_preferences", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull().unique(),
+  directBookingEnabled: text("direct_booking_enabled").notNull().default("false"),
+  directBookingCalendarId: text("direct_booking_calendar_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+})

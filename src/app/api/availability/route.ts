@@ -17,7 +17,10 @@ import {
 } from "date-fns"
 import { getCalendarEvents } from "@/lib/google"
 
+export const revalidate = 0
+
 export async function GET(request: Request) {
+  console.log('hello world')
   const { searchParams } = new URL(request.url)
   const username = searchParams.get("username")
   const year = searchParams.get("year")
